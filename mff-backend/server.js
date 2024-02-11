@@ -3,6 +3,7 @@ const path = require('path');
 const {APP_TERMINAL_COLOR_SCHEMA, APP_PORT} = require('./config/configuration');
 const {loggerMiddleware} = require('./middlewares/logger.middleware');
 const {notFoundMiddleware} = require('./middlewares/not-found.middleware');
+const allRoutes = require('./routes/all.routes');
 const app = express();
 const globalRouter = express.Router();
 
@@ -12,9 +13,8 @@ app.use('/resources', express.static(path.join(process.cwd(), 'uploads')));
 app.use(express.json());
 
 
-// Custom routes
-
-
+// All routes
+globalRouter.use(allRoutes);
 
 
 // Wrapping routes

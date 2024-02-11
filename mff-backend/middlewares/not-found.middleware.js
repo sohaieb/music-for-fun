@@ -1,7 +1,6 @@
+const {notFoundHelper} = require('../helpers/not-found.helper');
 function notFoundMiddleware(req, res) {
-    res.status(404).json({
-        error: `${req.baseURL}${req.path} does not exist`
-    });
+    notFoundHelper(res, `${req.baseUrl}${req.path} does not exist`);
 }
 
 
