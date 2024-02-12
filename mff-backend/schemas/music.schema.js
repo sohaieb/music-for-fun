@@ -1,7 +1,7 @@
 /**
  * Music entity schema
  *
- * @type {{imageUrl: {isString: boolean, notEmpty: boolean}, description: {isString: boolean, notEmpty: boolean}, title: {isString: boolean, notEmpty: boolean}}}
+ * @type {{attachedFile: {isString: boolean, notEmpty: boolean}, description: {isString: boolean, notEmpty: boolean}, title: {isString: boolean, notEmpty: boolean}}}
  */
 module.exports = {
     title: {
@@ -14,14 +14,14 @@ module.exports = {
         in: ['body'],
         isString: true,
         optional: true
-    },
-    imageUrl: {
+    }/*,
+    attachedFile: {
         in: ['body'],
         isString: {
-            errorMessage: 'imageUrl have to be an image url'
+            errorMessage: 'attachedFile have to be an image url'
         },
         notEmpty: {
-            errorMessage: 'imageUrl is required'
+            errorMessage: 'attachedFile is required'
         }
-    }
+    }*/
 }
