@@ -1,6 +1,7 @@
 const {musics} = require('../models/music.model');
 const {notFoundHelper} = require('../helpers/not-found.helper');
 const {v4: uuidv4} = require('uuid');
+const {validationResult} = require('express-validator');
 
 /**
  * Get all available music entities
@@ -36,6 +37,10 @@ function getMusicById(req, res) {
  */
 function createMusic(req, res) {
     const newMusic = {...req.body, id: uuidv4()};
+    const validationResults = validationResult(req);
+    if (validationResults.array().length) {
+        return res.status(422).json({error: validationResults.mapped()});
+    }
     musics.push(newMusic);
     res.status(201).json(newMusic);
 }
