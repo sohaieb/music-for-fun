@@ -1,7 +1,9 @@
-const {musics} = require('../models/music.model');
+const {musicRepository} = require('../models/music.model');
 const {notFoundHelper} = require('../helpers/not-found.helper');
 const {v4: uuidv4} = require('uuid');
 const {validationResult} = require('express-validator');
+const {MulterError} = require("multer");
+const path = require('path');
 
 /**
  * Get all available music entities
@@ -10,7 +12,7 @@ const {validationResult} = require('express-validator');
  * @param res
  */
 function getAllMusics(req, res) {
-    res.json(musics);
+    res.json(musicRepository.musics);
 }
 
 /**
@@ -21,7 +23,7 @@ function getAllMusics(req, res) {
  * @returns {*}
  */
 function getMusicById(req, res) {
-    const music = musics.find(music => music.id.toString() === req.params.id);
+    const music = musicRepository.musics.find(music => music.id.toString() === req.params.id);
     if (music) {
         return res.json(music);
     }
@@ -35,13 +37,26 @@ function getMusicById(req, res) {
  * @param req
  * @param res
  */
-function createMusic(req, res) {
+async function createMusic(req, res) {
     const newMusic = {...req.body, id: uuidv4()};
     const validationResults = validationResult(req);
     if (validationResults.array().length) {
         return res.status(422).json({error: validationResults.mapped()});
     }
-    musics.push(newMusic);
+    newMusic.attachedFile = req.files.attachedFile?.[0]?.path;
+    newMusic.musicCoverPicture = req.files.musicCoverPicture?.[0]?.path;
+    if (newMusic.attachedFile) {
+        newMusic.attachedFile = path.relative(process.cwd(), newMusic.attachedFile);
+    } else {
+        delete newMusic.attachedFile;
+    }
+    if (newMusic.musicCoverPicture) {
+        newMusic.musicCoverPicture = path.relative(process.cwd(), newMusic.musicCoverPicture);
+    } else {
+        delete newMusic.musicCoverPicture;
+    }
+    musicRepository.musics.push(newMusic);
+    await musicRepository.update();
     res.status(201).json(newMusic);
 }
 
@@ -53,11 +68,11 @@ function createMusic(req, res) {
  */
 function updateMusic(req, res) {
     const musicId = req.params.id.toString();
-    const musicIndex = musics.findIndex(music => music.id.toString() === musicId);
+    const musicIndex = musicRepository.musics.findIndex(music => music.id.toString() === musicId);
     if (musicIndex >= 0) {
         const updatedMusic = req.body;
-        musics[musicIndex] = {...musics[musicIndex], ...req.body};
-        return res.status(200).json(musics[musicIndex]);
+        musicRepository.musics[musicIndex] = {...musicRepository.musics[musicIndex], ...req.body};
+        return res.status(200).json(musicRepository.musics[musicIndex]);
     }
 
     notFoundHelper(res, 'Music does not exist');
@@ -72,13 +87,35 @@ function updateMusic(req, res) {
  */
 function deleteMusic(req, res) {
     const musicId = req.params.id.toString();
-    const musicIndex = musics.findIndex(music => music.id.toString() === musicId);
+    const musicIndex = musicRepository.musics.findIndex(music => music.id.toString() === musicId);
     if (musicIndex >= 0) {
-        const deletedMusic = musics.splice(musicIndex, 1)[0];
+        const deletedMusic = musicRepository.musics.splice(musicIndex, 1)[0];
         return res.status(200).json(deletedMusic);
     }
 
     notFoundHelper(res, 'Music does not exist');
+}
+
+/**
+ * Handle different music APIs errors like upload files
+ *
+ * @param err
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+function handleMusicErrors(err, req, res, next) {
+    if (err && err instanceof MulterError) {
+        err.name = 'File validation error';
+        if (err.code === 1) {
+            err.error = 'attachedFile should be an audio or video';
+        } else if (err.code === 2) {
+            err.error = 'musicCoverPicture should be an image';
+        }
+        return res.status(422).json(err);
+    }
+    next();
 }
 
 
@@ -87,5 +124,6 @@ module.exports = {
     getMusicById,
     createMusic,
     updateMusic,
-    deleteMusic
+    deleteMusic,
+    handleMusicErrors
 }

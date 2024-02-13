@@ -12,17 +12,7 @@ musicRouter.post('/', uploader.fields([{name: 'attachedFile'}, {name: 'musicCove
 musicRouter.put('/:id', checkSchema(musicSchema), musicController.updateMusic);
 musicRouter.delete('/:id', musicController.deleteMusic);
 
-musicRouter.use((err, req, res, next) => {
-    if (err && err instanceof MulterError) {
-        err.name = 'File validation error';
-        if (err.code === 1) {
-            err.error = 'attachedFile should be an audio or video';
-        } else if (err.code === 2) {
-            err.error = 'musicCoverPicture should be an image';
-        }
-        return res.status(422).json(err);
-    }
-    next();
-})
+
+musicRouter.use(musicController.handleMusicErrors);
 
 module.exports = musicRouter;

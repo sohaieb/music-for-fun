@@ -16,5 +16,6 @@ module.exports = {
         SUCCESS: chalk.hex('#37fa01'),
         WARNING: chalk.hex('#fad101'),
         TIME: chalk.hex('#7901fa'),
+        PATH: chalk.hex('#81d0fa')
     }
 }
